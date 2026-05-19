@@ -25,10 +25,8 @@ Ao contrário de timers convencionais, este projeto foi desenhado pensando na ex
 
 ---
 
-## 🔧 Acesse o projeto:
-```bash
-   git clone [https://ashmuchluv.github.io/retro-pomodoro/]
+## 🔧 Acesse o projeto [Clicando Aqui](https://ashmuchluv.github.io/retro-pomodoro/)
 
-```
-
-![Texto Alternativo](pomoimg.png)
+<p align="center">
+  <img src="pomoimg.png" alt="Preview do Pomodoro" width="500">
+</p>
