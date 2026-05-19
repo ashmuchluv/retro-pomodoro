@@ -1,4 +1,4 @@
-# ☁️ Cloud Pomodoro Timer
+# 🕑 Retrô Pomodoro Timer
 
 > "Foco estruturado com uma estética nostálgica."
 
@@ -6,7 +6,7 @@ Um cronômetro de produtividade baseado na Técnica Pomodoro, projetado com uma 
 
 ---
 
-## 🚀 Funcionalidades
+## ⏳ Funcionalidades
 
 * **Configuração Dinâmica:** Ajuste customizável dos tempos de foco (Trabalho) e Pausa (Descanso) diretamente na interface.
 * **Controle de Fluxo:** Opções completas de Iniciar, Pausar e Reiniciar o ciclo com feedbacks visuais claros.
