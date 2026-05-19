@@ -27,6 +27,6 @@ Ao contrário de timers convencionais, este projeto foi desenhado pensando na ex
 
 ## 🔧 Acesse o projeto [Clicando Aqui](https://ashmuchluv.github.io/retro-pomodoro/)
 
-<p align="center">
-  <img src="pomoimg.png" alt="Preview do Pomodoro" width="500">
+<p align="left">
+  <img src="pomoimg.png" alt="Preview do Pomodoro" width="350">
 </p>
