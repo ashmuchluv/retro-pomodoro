@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer</title>
+    <style>
+        /* ============================================
+           RESET & BASE
+           ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Tahoma', 'MS Sans Serif', sans-serif;
+            background: url('clouds.png');
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+
+        /* ============================================
+           JANELA PRINCIPAL — Estilo Windows refinado
+           ============================================ */
+        .window {
+            background: linear-gradient(180deg, #f1efe986 0%, #e8e4dbb2 100%);
+            border: 1px solid #8b8680;
+            border-radius: 6px;
+            box-shadow: 
+                0 20px 60px rgba(0,0,0,0.5),
+                0 2px 4px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            width: 100%;
+            max-width: 440px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Barra de título com gradiente suave */
+        .title-bar {
+            background: linear-gradient(180deg, #4a5568 0%, #2d3748 100%);
+            color: #f7fafc;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #1a202c;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .title-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Ícone do relógio desenhado em CSS */
+        .title-icon {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f7fafc;
+            border-radius: 50%;
+            position: relative;
+            opacity: 0.9;
+        }
+        .title-icon::before {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 5px;
+            background: #f7fafc;
+            top: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .title-icon::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 2px;
+            background: #f7fafc;
+            top: 7px;
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+            transform-origin: left center;
+        }
+
+        /* Botões da janela */
+        .window-controls {
+            display: flex;
+            gap: 4px;
+        }
+
+        .win-btn {
+            width: 18px;
+            height: 16px;
+            background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e0 100%);
+            border: 1px solid #a0aec0;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #4a5568;
+            cursor: default;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+            line-height: 1;
+        }
+
+        .win-btn.close {
+            background: linear-gradient(180deg, #fc8181 0%, #e53e3e 100%);
+            border-color: #c53030;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* ============================================
+           CONTEÚDO
+           ============================================ */
+        .window-content {
+            padding: 20px 24px 16px;
+        }
+
+        /* Frase motivacional */
+        .motto {
+            text-align: center;
+            font-size: 15px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 18px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* ============================================
+           TIMER CÍRCULO
+           ============================================ */
+        .timer-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .timer-circle-wrapper {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .timer-circle {
+            width: 170px;
+            height: 170px;
+            border: 3px solid #4a5568;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: radial-gradient(circle at 35% 35%, #ffffff 0%, #f0ebe0 100%);
+            box-shadow: 
+                inset 0 2px 8px rgba(0,0,0,0.08),
+                0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Anel de progresso SVG */
+        .progress-ring {
+            position: absolute;
+            top: -9px;
+            left: -9px;
+            width: 182px;
+            height: 182px;
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-bg {
+            fill: none;
+            stroke: #e2e8f0;
+            stroke-width: 4;
+        }
+
+        .progress-ring-fill {
+            fill: none;
+            stroke: #ed8936;
+            stroke-width: 4;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+        
+        .time-display {
+            font-size: 38px;
+            font-weight: 700;
+            font-family: 'Courier New', 'Consolas', monospace;
+            color: #1a202c;
+            letter-spacing: -1px;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+            z-index: 2;
+        }
+
+        /* Modo atual embaixo do círculo */
+        .mode-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 4px;
+        }
+
+        .mode-label.work { color: #c53030; }
+        .mode-label.break { color: #2f855a; }
+
+        /* ============================================
+           CONFIGURAÇÕES DE TEMPO (Editáveis)
+           ============================================ */
+        .settings-panel {
+            background: linear-gradient(180deg, #f7fafc 0%, #edf2f7 100%);
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .settings-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .settings-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .setting-label {
+            font-size: 11px;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        /* Input de minutos editável */
+        .time-input {
+            width: 52px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            color: #2d3748;
+            background: #fff;
+            border: 2px solid #a0aec0;
+            border-radius: 3px;
+            padding: 4px 2px;
+            outline: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .time-input:hover {
+            border-color: #718096;
+            background: #fffaf0;
+        }
+
+        .time-input:focus {
+            border-color: #ed8936;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(237,137,54,0.15);
+        }
+
+        .time-unit {
+            font-size: 10px;
+            color: #a0aec0;
+        }
+
+        /* Separador */
+        .settings-divider {
+            width: 1px;
+            height: 36px;
+            background: #cbd5e0;
+        }
+
+        /* ============================================
+           PROGRESSO DE CICLOS
+           ============================================ */
+        .cycle-section {
+            margin-bottom: 16px;
+        }
+
+        .cycle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .cycle-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #4a5568;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cycle-count {
+            font-size: 11px;
+            color: #718096;
+            font-weight: 600;
+        }
+
+        .cycle-marks {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .cycle-mark {
+            width: 22px;
+            height: 22px;
+            border: 1px solid #a0aec0;
+            background: linear-gradient(180deg, #fff 0%, #f7fafc 100%);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: #38a169;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+
+        .cycle-mark.empty {
+            color: transparent;
+        }
+
+        .cycle-mark.active {
+            border-color: #ed8936;
+            background: linear-gradient(180deg, #fffaf0 0%, #feebc8 100%);
+            box-shadow: 0 0 0 2px rgba(237,137,54,0.2), inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+
+        /* ============================================
+           BOTÕES DE CONTROLE
+           ============================================ */
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+
+        .btn {
+            padding: 8px 22px;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            border: 2px solid;
+            border-color: #fff #718096 #718096 #fff;
+            border-radius: 3px;
+            color: #1a202c;
+            min-width: 90px;
+            position: relative;
+            outline: none;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: transform 0.05s;
+        }
+
+        .btn:active {
+            border-color: #718096 #fff #fff #718096;
+            transform: translateY(1px);
+        }
+
+        .btn-start {
+            background: linear-gradient(180deg, #9ae6b4 0%, #68d391 100%);
+        }
+        .btn-start:hover {
+            background: linear-gradient(180deg, #b8f0cc 0%, #7ee3a0 100%);
+        }
+
+        .btn-pause {
+            background: linear-gradient(180deg, #fefcbf 0%, #f6e05e 100%);
+        }
+        .btn-pause:hover {
+            background: linear-gradient(180deg, #fff9c2 0%, #f9e076 100%);
+        }
+
+        .btn-reset {
+            background: linear-gradient(180deg, #feb2b2 0%, #fc8181 100%);
+        }
+        .btn-reset:hover {
+            background: linear-gradient(180deg, #ffcaca 0%, #fd9b9b 100%);
+        }
+
+        .btn-icon {
+            margin-right: 5px;
+            font-size: 11px;
+        }
+
+        /* ============================================
+           BARRA DE STATUS
+           ============================================ */
+        .status-bar {
+            background: linear-gradient(180deg, #edf2f7 0%, #e2e8f0 100%);
+            border: 1px solid #cbd5e0;
+            border-radius: 3px;
+            padding: 8px 12px;
+            font-size: 11px;
+            color: #4a5568;
+            text-align: center;
+            font-weight: 500;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        /* ============================================
+           INSTRUÇÕES E ASSINATURA
+           ============================================ */
+        .instructions {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px dashed #cbd5e0;
+            font-size: 10px;
+            color: #a0aec0;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .instructions strong {
+            color: #718096;
+        }
+
+        .signature {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 10px;
+            color: #a0aec0;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            opacity: 0.7;
+        }
+
+        /* ============================================
+           ANIMAÇÕES
+           ============================================ */
+        @keyframes flash {
+            0%, 100% { box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+            50% { box-shadow: 0 20px 60px rgba(237,137,54,0.4), 0 0 30px rgba(237,137,54,0.2); }
+        }
+
+        .window.flash {
+            animation: flash 0.6s ease 4;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.3); }
+        }
+
+        .timer-circle-wrapper.running .progress-dot {
+            animation: pulse-dot 1s ease infinite;
+        }
+
+        /* Tooltip nos inputs */
+        .setting-item {
+            position: relative;
+        }
+
+        .setting-item::after {
+            content: '✎ clique para editar';
+            position: absolute;
+            bottom: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            color: #a0aec0;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .setting-item:hover::after {
+            opacity: 1;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+
+    <div class="window" id="appWindow">
+        <!-- Barra de título -->
+        <div class="title-bar">
+            <div class="title-text">
+                <div class="title-icon"></div>
+                <span>Pomodoro Timer</span>
+            </div>
+            <div class="window-controls">
+                <div class="win-btn">_</div>
+                <div class="win-btn">□</div>
+                <div class="win-btn close">×</div>
+            </div>
+        </div>
+
+        <div class="window-content">
+            <!-- Frase motivacional -->
+            <div class="motto">Hora do foco!</div>
+
+            <!-- Timer circular -->
+            <div class="timer-section">
+                <div class="timer-circle-wrapper" id="timerWrapper">
+                    <div class="timer-circle">
+                        <!-- SVG para anel de progresso suave -->
+                        <svg class="progress-ring" viewBox="0 0 182 182">
+                            <circle class="progress-ring-bg" cx="91" cy="91" r="86"/>
+                            <circle class="progress-ring-fill" id="progressRing" cx="91" cy="91" r="86"
+                                stroke-dasharray="540.35" stroke-dashoffset="0"/>
+                        </svg>
+                        <div class="progress-dot"></div>
+                        <div class="time-display" id="timeDisplay">25:00</div>
+                    </div>
+                </div>
+                <div class="mode-label work" id="modeLabel">Trabalho</div>
+            </div>
+
+            <!-- Configurações de tempo — editáveis -->
+            <div class="settings-panel">
+                <div class="settings-title">⏱ Configurar Tempos</div>
+                <div class="settings-row">
+                    <div class="setting-item">
+                        <span class="setting-label">Trabalho</span>
+                        <input type="number" class="time-input" id="workMinutes" value="25" min="1" max="120">
+                        <span class="time-unit">min</span>
+                    </div>
+                    <div class="settings-divider"></div>
+                    <div class="setting-item">
+                        <span class="setting-label">Descanso</span>
+                        <input type="number" class="time-input" id="breakMinutes" value="5" min="1" max="60">
+                        <span class="time-unit">min</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progresso dos ciclos -->
+            <div class="cycle-section">
+                <div class="cycle-header">
+                    <span class="cycle-label">Progresso dos Ciclos</span>
+                    <span class="cycle-count" id="cycleCount">0 / 4</span>
+                </div>
+                <div class="cycle-marks" id="cycleMarks">
+                    <!-- Gerado via JS -->
+                </div>
+            </div>
+
+            <!-- Botões -->
+            <div class="controls">
+                <button class="btn btn-start" id="btnStart" onclick="startTimer()">
+                    <span class="btn-icon">▶</span>Iniciar
+                </button>
+                <button class="btn btn-pause" id="btnPause" onclick="pauseTimer()">
+                    <span class="btn-icon">⏸</span>Pausar
+                </button>
+                <button class="btn btn-reset" id="btnReset" onclick="resetTimer()">
+                    <span class="btn-icon">↺</span>Reiniciar
+                </button>
+            </div>
+
+            <!-- Status -->
+            <div class="status-bar" id="statusBar">
+                Pronto para focar. Ajuste os tempos acima e clique em Iniciar.
+            </div>
+
+            <!-- Instruções -->
+            <div class="instructions">
+                <strong>Como usar:</strong> edite os minutos de Trabalho e Descanso clicando nos números. 
+                O timer alterna automaticamente entre trabalho e descanso. 
+                A cada 4 ciclos de trabalho, faça uma pausa maior.
+            </div>
+
+            <!-- Assinatura -->
+            <div class="signature">ashmuchluv</div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // ESTADO
+        // ============================================
+        let workMinutes = 25;
+        let breakMinutes = 5;
+        let currentMode = 'work'; // 'work' ou 'break'
+        let timeLeft = 25 * 60;
+        let totalTime = 25 * 60;
+        let isRunning = false;
+        let timerInterval = null;
+        let completedWorkCycles = 0;
+        let totalCyclesTarget = 4;
+        let currentCycleInSet = 0; // 0 a 4
+
+        // Elementos DOM
+        const elTimeDisplay = document.getElementById('timeDisplay');
+        const elModeLabel = document.getElementById('modeLabel');
+        const elStatusBar = document.getElementById('statusBar');
+        const elProgressRing = document.getElementById('progressRing');
+        const elTimerWrapper = document.getElementById('timerWrapper');
+        const elWorkInput = document.getElementById('workMinutes');
+        const elBreakInput = document.getElementById('breakMinutes');
+        const elCycleCount = document.getElementById('cycleCount');
+        const elAppWindow = document.getElementById('appWindow');
+
+        // Circunferência do anel SVG (2 * PI * 86 ≈ 540.35)
+        const CIRCUMFERENCE = 2 * Math.PI * 86;
+
+        // ============================================
+        // INICIALIZAÇÃO
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            updateDisplay();
+            renderCycles();
+            setupInputs();
+        });
+
+        // ============================================
+        // INPUTS EDITÁVEIS
+        // ============================================
+        function setupInputs() {
+            // Quando o usuário altera os minutos
+            elWorkInput.addEventListener('change', function() {
+                let val = parseInt(this.value);
+                if (val < 1) val = 1;
+                if (val > 120) val = 120;
+                this.value = val;
+                workMinutes = val;
+
+                // Se está no modo trabalho e parado, atualiza o timer
+                if (currentMode === 'work' && !isRunning) {
+                    timeLeft = workMinutes * 60;
+                    totalTime = timeLeft;
+                    updateDisplay();
+                }
+                saveSettings();
+                updateStatus('Tempo de trabalho ajustado para ' + val + ' minutos.');
+            });
+
+            elBreakInput.addEventListener('change', function() {
+                let val = parseInt(this.value);
+                if (val < 1) val = 1;
+                if (val > 60) val = 60;
+                this.value = val;
+                breakMinutes = val;
+
+                if (currentMode === 'break' && !isRunning) {
+                    timeLeft = breakMinutes * 60;
+                    totalTime = timeLeft;
+                    updateDisplay();
+                }
+                saveSettings();
+                updateStatus('Tempo de descanso ajustado para ' + val + ' minutos.');
+            });
+        }
+
+        // ============================================
+        // CONTROLE DO TIMER
+        // ============================================
+        function startTimer() {
+            if (isRunning) return;
+
+            isRunning = true;
+            elTimerWrapper.classList.add('running');
+            updateStatus('▶ Timer rodando... Mantenha o foco!');
+
+            timerInterval = setInterval(function() {
+                timeLeft--;
+                updateDisplay();
+
+                if (timeLeft <= 0) {
+                    completeSession();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (!isRunning) return;
+
+            isRunning = false;
+            elTimerWrapper.classList.remove('running');
+            clearInterval(timerInterval);
+            timerInterval = null;
+            updateStatus('⏸ Timer pausado. Clique em Iniciar para continuar.');
+        }
+
+      function resetTimer() {
+    if (isRunning) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        isRunning = false;
+        elTimerWrapper.classList.remove('running');
+    }
+
+    // Zera o progresso dos ciclos
+    completedWorkCycles = 0;
+    currentCycleInSet = 0;
+    renderCycles();
+    saveSettings();
+
+    const mins = currentMode === 'work' ? workMinutes : breakMinutes;
+    timeLeft = mins * 60;
+    totalTime = timeLeft;
+
+    updateDisplay();
+    updateStatus('↺ Timer reiniciado. Progresso zerado. Pronto para começar.');
+}
+
+        // ============================================
+        // LÓGICA DE SESSÃO
+        // ============================================
+        function completeSession() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            isRunning = false;
+            elTimerWrapper.classList.remove('running');
+
+            // Efeito visual de flash
+            elAppWindow.classList.add('flash');
+            setTimeout(function() {
+                elAppWindow.classList.remove('flash');
+            }, 2400);
+
+            playBeep();
+
+            if (currentMode === 'work') {
+                // Sessão de trabalho completada
+                completedWorkCycles++;
+                currentCycleInSet = (completedWorkCycles % totalCyclesTarget);
+                renderCycles();
+
+                // Alterna para descanso
+                currentMode = 'break';
+                timeLeft = breakMinutes * 60;
+                totalTime = timeLeft;
+
+                if (completedWorkCycles % totalCyclesTarget === 0) {
+                    updateStatus('🎉 ' + totalCyclesTarget + ' ciclos completados! Hora de um descanso merecido.');
+                } else {
+                    updateStatus('✓ Ciclo de trabalho finalizado! Hora do descanso (' + breakMinutes + ' min).');
+                }
+            } else {
+                // Descanso completado
+                currentMode = 'work';
+                timeLeft = workMinutes * 60;
+                totalTime = timeLeft;
+                updateStatus('☕ Descanso encerrado! Volte ao trabalho focado.');
+            }
+
+            updateDisplay();
+        }
+
+        // ============================================
+        // ATUALIZAÇÃO DA INTERFACE
+        // ============================================
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const display = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+
+            elTimeDisplay.textContent = display;
+            document.title = display + ' - Pomodoro';
+
+            // Atualiza label do modo
+            if (currentMode === 'work') {
+                elModeLabel.textContent = 'Trabalho';
+                elModeLabel.className = 'mode-label work';
+            } else {
+                elModeLabel.textContent = 'Descanso';
+                elModeLabel.className = 'mode-label break';
+            }
+
+            // Atualiza anel SVG de progresso
+            const progress = 1 - (timeLeft / totalTime);
+            const offset = CIRCUMFERENCE - (progress * CIRCUMFERENCE);
+            elProgressRing.style.strokeDashoffset = offset;
+        }
+
+        function renderCycles() {
+            const container = document.getElementById('cycleMarks');
+            container.innerHTML = '';
+
+            // Ciclo atual dentro do conjunto de 4
+            const currentInSet = completedWorkCycles % totalCyclesTarget;
+
+            for (let i = 0; i < totalCyclesTarget; i++) {
+                const mark = document.createElement('div');
+                mark.className = 'cycle-mark';
+
+                if (i < currentInSet) {
+                    mark.textContent = '✓';
+                } else if (i === currentInSet && currentMode === 'work' && isRunning) {
+                    mark.className = 'cycle-mark active';
+                    mark.textContent = '○';
+                } else {
+                    mark.classList.add('empty');
+                    mark.textContent = '○';
+                }
+
+                container.appendChild(mark);
+            }
+
+            // Atualiza contador
+            const totalSets = Math.floor(completedWorkCycles / totalCyclesTarget);
+            elCycleCount.textContent = completedWorkCycles + ' / ' + totalCyclesTarget + ' (×' + totalSets + ')';
+        }
+
+        function updateStatus(msg) {
+            elStatusBar.textContent = msg;
+        }
+
+        // ============================================
+        // PERSISTÊNCIA
+        // ============================================
+        function saveSettings() {
+            localStorage.setItem('pomodoro_work', workMinutes);
+            localStorage.setItem('pomodoro_break', breakMinutes);
+            localStorage.setItem('pomodoro_cycles', completedWorkCycles);
+        }
+
+        function loadSettings() {
+            const savedWork = localStorage.getItem('pomodoro_work');
+            const savedBreak = localStorage.getItem('pomodoro_break');
+            const savedCycles = localStorage.getItem('pomodoro_cycles');
+
+            if (savedWork) {
+                workMinutes = parseInt(savedWork);
+                elWorkInput.value = workMinutes;
+            }
+            if (savedBreak) {
+                breakMinutes = parseInt(savedBreak);
+                elBreakInput.value = breakMinutes;
+            }
+            if (savedCycles) {
+                completedWorkCycles = parseInt(savedCycles);
+            }
+
+            // Atualiza tempo inicial
+            timeLeft = workMinutes * 60;
+            totalTime = timeLeft;
+        }
+
+        // Salva ciclos quando completados
+        const originalCompleteSession = completeSession;
+        completeSession = function() {
+            originalCompleteSession();
+            saveSettings();
+        };
+
+        // ============================================
+        // SOM
+        // ============================================
+        function playBeep() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+                // Primeiro tom (mais alto)
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.frequency.value = 880;
+                osc1.type = 'sine';
+                gain1.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                osc1.start(audioCtx.currentTime);
+                osc1.stop(audioCtx.currentTime + 0.3);
+
+                // Segundo tom (um pouco mais baixo, para efeito de "ding-dong")
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.frequency.value = 698;
+                osc2.type = 'sine';
+                gain2.gain.setValueAtTime(0.15, audioCtx.currentTime + 0.25);
+                gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.7);
+                osc2.start(audioCtx.currentTime + 0.25);
+                osc2.stop(audioCtx.currentTime + 0.7);
+            } catch (e) {
+                console.log('Audio não disponível');
+            }
+        }
+    </script>
+</body>
+</html>
