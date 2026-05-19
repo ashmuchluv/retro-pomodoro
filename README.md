@@ -22,3 +22,13 @@ Ao contrário de timers convencionais, este projeto foi desenhado pensando na ex
 * **Foco na Identidade:** Estética retrô que equilibra nostalgia com a clareza de elementos modernos.
 * **Acessibilidade Visual:** Botões com cores universais de ação (Verde para iniciar, Amarelo para pausar, Vermelho para resetar).
 * **Microinterações:** Inputs numéricos nativos e limpos para facilitar a customização do tempo pelo usuário.
+
+---
+
+## 🔧 Acesse o projeto:
+```bash
+   git clone [https://ashmuchluv.github.io/retro-pomodoro/]
+
+```
+
+![Texto Alternativo](pomoimg.png)
